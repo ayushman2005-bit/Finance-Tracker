@@ -1,0 +1,72 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/static/style.css">
+<title>Login · Finance Tracker</title>
+<script>
+  (function(){
+    var t=localStorage.getItem('ft-theme')||'dark';
+    document.documentElement.setAttribute('data-theme',t);
+  })();
+</script>
+</head>
+<body class="auth-page">
+
+<!-- Galaxy background (dark) -->
+<div class="stars-layer"></div>
+<div class="nebula">
+  <div class="nebula-blob"></div>
+  <div class="nebula-blob"></div>
+  <div class="nebula-blob"></div>
+</div>
+
+<!-- Light mode orbs (light) -->
+<div class="light-orbs">
+  <div class="light-orb"></div>
+  <div class="light-orb"></div>
+</div>
+
+<!-- Theme toggle (top-right) -->
+<button class="theme-toggle" id="theme-btn" style="position:fixed;top:20px;right:20px;z-index:99">
+  <span class="toggle-icon">☀</span>
+  <span class="toggle-label">Light mode</span>
+</button>
+
+<div class="auth-card">
+  <div class="brand">
+    <div class="logo">FT</div>
+    <div>
+      <div class="brand-name">Finance Tracker</div>
+      <div class="subtitle">Track spending with clarity.</div>
+    </div>
+  </div>
+
+  <h2>Welcome back.</h2>
+
+  {% if error %}
+  <div class="error">⚠ {{ error }}</div>
+  {% endif %}
+
+  <form class="auth-form" method="POST">
+    <label class="field">
+      <span>Username</span>
+      <input name="username" placeholder="Your username" autocomplete="username" required>
+    </label>
+    <label class="field">
+      <span>Password</span>
+      <input name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+    </label>
+    <button class="primary" type="submit">Login →</button>
+  </form>
+
+  <div class="auth-footer">
+    <span>New here?</span>
+    <a class="ghost" href="/register">Create account</a>
+  </div>
+</div>
+
+<script src="/static/theme.js"></script>
+</body>
+</html>

@@ -1,0 +1,192 @@
+﻿<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/static/style.css">
+<title>Dashboard · Finance Tracker</title>
+<script>
+  (function(){
+    var t=localStorage.getItem('ft-theme')||'dark';
+    document.documentElement.setAttribute('data-theme',t);
+  })();
+</script>
+</head>
+<body class="app">
+
+<div class="stars-layer"></div>
+<div class="nebula">
+  <div class="nebula-blob"></div>
+  <div class="nebula-blob"></div>
+  <div class="nebula-blob"></div>
+</div>
+<div class="light-orbs">
+  <div class="light-orb"></div>
+  <div class="light-orb"></div>
+</div>
+
+<div class="page">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">FT</div>
+      <div>
+        <div class="brand-name">Finance Tracker</div>
+        <div class="subtitle">Welcome back, {{ current_user.username }}.</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="theme-toggle" id="theme-btn">
+        <span class="toggle-icon">☀</span>
+        <span class="toggle-label">Light mode</span>
+      </button>
+      <a class="ghost" href="/logout">Logout</a>
+    </div>
+  </header>
+
+  <main class="grid">
+
+    <!-- SUMMARY -->
+    <section class="card summary">
+      <div class="summary-header">
+        <h1>Overview</h1>
+        <span class="date-pill" id="today-pill"></span>
+      </div>
+      <div class="total">
+        <span class="label">Total Expenses</span>
+        <span class="amount">₹{{ '%.2f' % total }}</span>
+      </div>
+      <div class="stat-bar">
+        <div class="stat-item">
+          <span class="s-label">Entries</span>
+          <span class="s-val">{{ expenses|length }}</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="s-label">Categories</span>
+          <span class="s-val" id="cat-count">—</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FORM -->
+    <section class="card form-card">
+      <h2>Add Expense</h2>
+      <form class="expense-form" action="/add" method="POST">
+        <label class="field">
+          <span>Title</span>
+          <input name="title" placeholder="Coffee, Rent, Groceries…" required>
+        </label>
+        <label class="field">
+          <span>Amount (₹)</span>
+          <input name="amount" type="number" step="0.01" min="0" placeholder="0.00" required>
+        </label>
+        <label class="field">
+          <span>Category</span>
+          <input name="category" list="cat-list" placeholder="Food, Travel, Bills…">
+          <datalist id="cat-list">
+            <option value="Food">
+            <option value="Travel">
+            <option value="Bills">
+            <option value="Shopping">
+            <option value="Health">
+            <option value="Subscriptions">
+            <option value="Education">
+            <option value="Fuel">
+          </datalist>
+        </label>
+        <label class="field">
+          <span>Date</span>
+          <input id="expense-date" name="date" type="date" required>
+        </label>
+        <button class="primary" type="submit">Add Expense →</button>
+      </form>
+    </section>
+
+    <!-- LIST -->
+    <section class="card list-card">
+      <div class="list-header">
+        <h2>Recent Expenses</h2>
+        <span class="count">{{ expenses|length }} item{% if expenses|length != 1 %}s{% endif %}</span>
+      </div>
+
+      {% if expenses %}
+      <ul class="expense-list">
+        {% for e in expenses %}
+        <li class="expense-item">
+          <div class="item-left">
+            <span class="cat-dot" data-cat="{{ e.category }}"></span>
+            <div>
+              <div class="item-title">{{ e.title }}</div>
+              <div class="item-meta">{{ e.category }} · {{ e.date.strftime('%b %d, %Y') if e.date else '' }}</div>
+            </div>
+          </div>
+          <div class="item-side">
+            <span class="cat-badge" data-cat="{{ e.category }}">{{ e.category }}</span>
+            <div class="item-amount">₹{{ '%.2f' % e.amount }}</div>
+            <a class="link-danger" href="/delete/{{ e.id }}">Delete</a>
+          </div>
+        </li>
+        {% endfor %}
+      </ul>
+      {% else %}
+      <p class="empty">No expenses yet. Add your first one above.</p>
+      {% endif %}
+    </section>
+
+  </main>
+</div>
+
+<script src="/static/theme.js"></script>
+<script>
+// ── Category colours ──────────────────────────────────
+const CAT = {
+  Food:          {dot:'#f59e0b',bg:'rgba(245,158,11,.13)',text:'#fbbf24'},
+  Travel:        {dot:'#22d3ee',bg:'rgba(34,211,238,.1)', text:'#67e8f9'},
+  Bills:         {dot:'#f43f5e',bg:'rgba(244,63,94,.1)',  text:'#fb7185'},
+  Shopping:      {dot:'#a78bfa',bg:'rgba(167,139,250,.1)',text:'#c4b5fd'},
+  Health:        {dot:'#34d399',bg:'rgba(52,211,153,.1)', text:'#6ee7b7'},
+  Subscriptions: {dot:'#6366f1',bg:'rgba(99,102,241,.13)',text:'#818cf8'},
+  Education:     {dot:'#fb923c',bg:'rgba(251,146,60,.1)', text:'#fdba74'},
+  Fuel:          {dot:'#94a3b8',bg:'rgba(148,163,184,.1)',text:'#cbd5e1'},
+};
+function cat(name){ return CAT[name]||{dot:'#6c63ff',bg:'rgba(108,99,255,.13)',text:'#9d97ff'} }
+
+document.querySelectorAll('.cat-dot').forEach(el=>{
+  const c=cat(el.dataset.cat);
+  el.style.background=c.dot;
+  el.style.boxShadow=`0 0 7px ${c.dot}99`;
+});
+document.querySelectorAll('.cat-badge').forEach(el=>{
+  const c=cat(el.dataset.cat);
+  el.style.background=c.bg;
+  el.style.color=c.text;
+  el.style.border=`1px solid ${c.text}44`;
+});
+
+// Unique categories count
+const cats=new Set([...document.querySelectorAll('.cat-dot')].map(e=>e.dataset.cat));
+const cc=document.getElementById('cat-count');
+if(cc) cc.textContent=cats.size||'0';
+
+// ── Date helpers ──────────────────────────────────────
+const dateInput=document.getElementById('expense-date');
+const todayPill=document.getElementById('today-pill');
+
+function fmtInput(d){
+  return new Date(d-d.getTimezoneOffset()*60000).toISOString().slice(0,10);
+}
+function fmtHuman(d){
+  return d.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+}
+function setToday(){
+  const now=new Date();
+  if(dateInput) dateInput.value=fmtInput(now);
+  if(todayPill)  todayPill.textContent=`Today · ${fmtHuman(now)}`;
+}
+setToday();
+const midnight=new Date(); midnight.setHours(24,0,0,0);
+setTimeout(()=>{ setToday(); setInterval(setToday,86400000); },midnight-new Date());
+</script>
+</body>
+</html>
